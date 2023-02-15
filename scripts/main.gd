@@ -1,17 +1,48 @@
 extends Node
 
+var swap = []
+var buttons = []
+var images = []
+
 func _ready():
+	randomize()
 	var image: Image = Image.new()
 	var tex: ImageTexture = ImageTexture.new()
+	var button_scene = preload("res://scenes/button.tscn")
 	image.load("res://assets/img/cat.png")
 	tex.create_from_image(image)
 	tex.set_size_override(Vector2(255, 255))
 	var tex_slices: Array = slice_texture(tex, 3, 3)
-	for slice in tex_slices:
-		var tex_button: TextureButton = TextureButton.new()
-		tex_button.texture_normal = slice
-		$GridContainer.add_child(tex_button)
 	
+	for i in tex_slices.size():
+		var button_instance = button_scene.instance()
+		button_instance.texture_normal = tex_slices[i]
+		button_instance.set_number(i)
+		button_instance.connect("pressed", self, "button_pressed", [button_instance])
+		buttons.append(button_instance)
+	
+	# Randomize the slices
+	buttons.shuffle()
+	
+	for button in buttons:
+		$GridContainer.add_child(button)
+
+func button_pressed(button):
+	if swap.size() > 0:
+		var idx_a = swap[0].get_index()
+		var idx_b = button.get_index()
+		$GridContainer.move_child(swap[0], idx_b)
+		print("move ", swap[0].number, " to index ", idx_b)
+		$GridContainer.move_child(button, idx_a)
+		print("move ", button.number, " to index ", idx_a)
+		swap.clear()
+	else:
+		print("append ", button.number, " to swap array")
+		swap.append(button)
+	
+	var tween = get_tree().create_tween()
+	tween.tween_method($GridContainer, "add_constant_override", 4, 0, 2)
+
 func slice_texture(tex: ImageTexture, cols: int, rows: int) -> Array:
 	var result: Array = []
 	var region: Rect2 = Rect2(Vector2(0, 0), Vector2(tex.get_width() / cols, tex.get_height() / rows))
