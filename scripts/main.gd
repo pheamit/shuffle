@@ -41,7 +41,11 @@ func button_pressed(button):
 		swap.append(button)
 	
 	var tween = get_tree().create_tween()
-	tween.tween_method($GridContainer, "add_constant_override", 4, 0, 2)
+	tween.tween_method(self, "mediator", 4, 0, 1, ["vseparation"])
+	tween.parallel().tween_method(self, "mediator", 4, 0, 1, ["hseparation"])
+	
+func mediator(value, property):
+	$GridContainer.add_constant_override(property, value)
 
 func slice_texture(tex: ImageTexture, cols: int, rows: int) -> Array:
 	var result: Array = []
