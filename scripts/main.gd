@@ -3,17 +3,18 @@ extends Node
 var swap = []
 var buttons = []
 var textures = []
+var sliced_textures = []
 export var columns = 3
 
 func _ready():
 	$GridContainer.columns = columns
 	randomize()
-	load_images("res://assets/img/")
-	textures.shuffle()
+	textures = load_textures("res://assets/img/")
+	sliced_textures = prep_sliced_textures(textures)
+	print(sliced_textures)
 	var button_scene = preload("res://scenes/button.tscn")
 	
-#	tex.set_size_override(Vector2(255, 255))
-	var tex_slices: Array = slice_texture(textures[0], columns, columns)
+	var tex_slices: Array = sliced_textures[0]
 	
 	for i in tex_slices.size():
 		var button_instance = button_scene.instance()
@@ -22,7 +23,7 @@ func _ready():
 		button_instance.connect("pressed", self, "button_pressed", [button_instance])
 		buttons.append(button_instance)
 	
-	# Randomize the slices
+	# Randomize buttons
 	buttons.shuffle()
 	
 	for button in buttons:
@@ -33,14 +34,11 @@ func button_pressed(button):
 		var idx_a = swap[0].get_index()
 		var idx_b = button.get_index()
 		$GridContainer.move_child(swap[0], idx_b)
-#		print("move ", swap[0].number, " to index ", idx_b)
 		$GridContainer.move_child(button, idx_a)
-#		print("move ", button.number, " to index ", idx_a)
 		swap.clear()
 		if is_solved():
 			victory()
 	else:
-#		print("append ", button.number, " to swap array")
 		swap.append(button)
 	
 func mediator(value, property):
@@ -83,23 +81,26 @@ func victory():
 	tween.tween_method(self, "mediator", 8.0, 0.0, 1, ["vseparation"]).set_trans(trans)
 	tween.parallel().tween_method(self, "mediator", 8.0, 0.0, 1, ["hseparation"]).set_trans(trans)
 
-func load_images(path):
+func load_textures(path: String) -> Array:
+	var result = []
 	var dir = Directory.new()
 	if dir.open(path) == OK:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
 		while file_name != "":
 			if !dir.current_is_dir() && !file_name.ends_with("import"):
-				textures.append(prep_tex(path + file_name))
+				result.append(prep_tex(path + file_name))
 			file_name = dir.get_next()
 	else:
 		print("An error occurred when trying to access the path.")
+	return result
 
 func prep_tex(path: String) -> ImageTexture:
 	var tex: ImageTexture = ImageTexture.new()
 	var image: Image = Image.new()
 	image.load(path)
 	tex.create_from_image(image)
+#	tex.set_size_override(Vector2(255, 255))
 	return tex
 
 func prep_sliced_textures(textures: Array) -> Array:
