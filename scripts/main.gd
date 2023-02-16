@@ -90,12 +90,20 @@ func load_images(path):
 		var file_name = dir.get_next()
 		while file_name != "":
 			if !dir.current_is_dir() && !file_name.ends_with("import"):
-#				print("Found file: " + path + file_name)
-				var image: Image = Image.new()
-				var tex: ImageTexture = ImageTexture.new()
-				image.load(path + file_name)
-				tex.create_from_image(image)
-				textures.append(tex)
+				textures.append(prep_tex(path + file_name))
 			file_name = dir.get_next()
 	else:
 		print("An error occurred when trying to access the path.")
+
+func prep_tex(path: String) -> ImageTexture:
+	var tex: ImageTexture = ImageTexture.new()
+	var image: Image = Image.new()
+	image.load(path)
+	tex.create_from_image(image)
+	return tex
+
+func prep_sliced_textures(textures: Array) -> Array:
+	var result = []
+	for tex in textures:
+		result.append(slice_texture(tex, columns, columns))
+	return result
