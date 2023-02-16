@@ -2,17 +2,18 @@ extends Node
 
 var swap = []
 var buttons = []
-var images = []
+var textures = []
+export var columns = 3
 
 func _ready():
+	$GridContainer.columns = columns
 	randomize()
-	var image: Image = Image.new()
-	var tex: ImageTexture = ImageTexture.new()
+	load_images("res://assets/img/")
+	textures.shuffle()
 	var button_scene = preload("res://scenes/button.tscn")
-	image.load("res://assets/img/cat.png")
-	tex.create_from_image(image)
-	tex.set_size_override(Vector2(255, 255))
-	var tex_slices: Array = slice_texture(tex, 3, 3)
+	
+#	tex.set_size_override(Vector2(255, 255))
+	var tex_slices: Array = slice_texture(textures[0], columns, columns)
 	
 	for i in tex_slices.size():
 		var button_instance = button_scene.instance()
@@ -32,14 +33,14 @@ func button_pressed(button):
 		var idx_a = swap[0].get_index()
 		var idx_b = button.get_index()
 		$GridContainer.move_child(swap[0], idx_b)
-		print("move ", swap[0].number, " to index ", idx_b)
+#		print("move ", swap[0].number, " to index ", idx_b)
 		$GridContainer.move_child(button, idx_a)
-		print("move ", button.number, " to index ", idx_a)
+#		print("move ", button.number, " to index ", idx_a)
 		swap.clear()
 		if is_solved():
 			victory()
 	else:
-		print("append ", button.number, " to swap array")
+#		print("append ", button.number, " to swap array")
 		swap.append(button)
 	
 func mediator(value, property):
@@ -81,3 +82,20 @@ func victory():
 	var trans = Tween.TRANS_CIRC
 	tween.tween_method(self, "mediator", 8.0, 0.0, 1, ["vseparation"]).set_trans(trans)
 	tween.parallel().tween_method(self, "mediator", 8.0, 0.0, 1, ["hseparation"]).set_trans(trans)
+
+func load_images(path):
+	var dir = Directory.new()
+	if dir.open(path) == OK:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if !dir.current_is_dir() && !file_name.ends_with("import"):
+#				print("Found file: " + path + file_name)
+				var image: Image = Image.new()
+				var tex: ImageTexture = ImageTexture.new()
+				image.load(path + file_name)
+				tex.create_from_image(image)
+				textures.append(tex)
+			file_name = dir.get_next()
+	else:
+		print("An error occurred when trying to access the path.")
