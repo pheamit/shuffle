@@ -36,13 +36,11 @@ func button_pressed(button):
 		$GridContainer.move_child(button, idx_a)
 		print("move ", button.number, " to index ", idx_a)
 		swap.clear()
+		if is_solved():
+			victory()
 	else:
 		print("append ", button.number, " to swap array")
 		swap.append(button)
-	
-	var tween = get_tree().create_tween()
-	tween.tween_method(self, "mediator", 4, 0, 1, ["vseparation"])
-	tween.parallel().tween_method(self, "mediator", 4, 0, 1, ["hseparation"])
 	
 func mediator(value, property):
 	$GridContainer.add_constant_override(property, value)
@@ -71,3 +69,15 @@ func slice_texture(tex: ImageTexture, cols: int, rows: int) -> Array:
 			region.position.y += region.size.y
 		offset_x = false
 	return result
+
+func is_solved() -> bool:
+	for button in $GridContainer.get_children():
+		if button.number != button.get_index():
+			return false
+	return true
+
+func victory():
+	var tween = get_tree().create_tween()
+	var trans = Tween.TRANS_CIRC
+	tween.tween_method(self, "mediator", 8.0, 0.0, 1, ["vseparation"]).set_trans(trans)
+	tween.parallel().tween_method(self, "mediator", 8.0, 0.0, 1, ["hseparation"]).set_trans(trans)
