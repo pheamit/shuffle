@@ -34,11 +34,11 @@ func new_puzzle():
 		buttons.append(button_instance)
 	
 	# Randomize buttons
-	print("button quant: ", buttons.size())
 	buttons.shuffle()
 	setup_container()
 	for button in buttons:
 		$GridContainer.add_child(button)
+	is_solved()
 
 func button_pressed(button):
 	if swap.size() > 0:
@@ -47,8 +47,7 @@ func button_pressed(button):
 		$GridContainer.move_child(swap[0], idx_b)
 		$GridContainer.move_child(button, idx_a)
 		swap.clear()
-		if is_solved():
-			victory()
+		is_solved()
 	else:
 		swap.append(button)
 	
@@ -80,11 +79,11 @@ func slice_texture(tex: ImageTexture, cols: float, rows: float) -> Array:
 		offset_x = false
 	return result
 
-func is_solved() -> bool:
+func is_solved():
 	for button in $GridContainer.get_children():
 		if button.number != button.get_index():
 			return false
-	return true
+	victory()
 
 func victory():
 	var tween = get_tree().create_tween()
@@ -101,7 +100,9 @@ func load_textures(path: String) -> Array:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
 		while file_name != "":
-			if !dir.current_is_dir() && !file_name.ends_with("import"):
+			# Very IMPORTANT to load the .import files!
+			if !dir.current_is_dir() && file_name.ends_with(".import"):
+				file_name = file_name.trim_suffix(".import")
 				result.append(prep_tex(path + file_name))
 			file_name = dir.get_next()
 	else:
@@ -109,11 +110,9 @@ func load_textures(path: String) -> Array:
 	return result
 
 func prep_tex(path: String) -> ImageTexture:
+	var stream_tex: StreamTexture = load(path)
 	var tex: ImageTexture = ImageTexture.new()
-	var image: Image = Image.new()
-	var _err = image.load(path)
-	tex.create_from_image(image)
-#	tex.set_size_override(Vector2(255, 255))
+	tex.create_from_image(stream_tex.get_data())
 	return tex
 
 func prep_sliced_textures(tex_arr: Array) -> Array:
