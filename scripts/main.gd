@@ -1,19 +1,22 @@
 extends Node
 
 var swap = []
+var button_scene
 var buttons = []
 var textures = []
 var sliced_textures = []
 export var columns = 3
 
 func _ready():
-	$GridContainer.columns = columns
 	randomize()
+	$GridContainer.columns = columns
 	textures = load_textures("res://assets/img/")
 	sliced_textures = prep_sliced_textures(textures)
 	sliced_textures.shuffle()
-	var button_scene = preload("res://scenes/button.tscn")
-	
+	button_scene = preload("res://scenes/button.tscn")
+	new_puzzle()
+
+func new_puzzle():
 	var tex_slices: Array = sliced_textures.pop_back()
 	
 	for i in tex_slices.size():
@@ -28,6 +31,7 @@ func _ready():
 	
 	for button in buttons:
 		$GridContainer.add_child(button)
+	pass
 
 func button_pressed(button):
 	if swap.size() > 0:
