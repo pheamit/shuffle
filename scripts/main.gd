@@ -5,18 +5,25 @@ var button_scene
 var buttons = []
 var textures = []
 var sliced_textures = []
-export var columns = 3
+export var columns = 2
+export var separation = 20
 
 func _ready():
 	randomize()
-	$GridContainer.columns = columns
+	setup_container()
 	textures = load_textures("res://assets/img/")
 	sliced_textures = prep_sliced_textures(textures)
 	sliced_textures.shuffle()
 	button_scene = preload("res://scenes/button.tscn")
 	new_puzzle()
 
+func setup_container():
+	$GridContainer.columns = columns
+	$GridContainer.add_constant_override("hseparation", separation)
+	$GridContainer.add_constant_override("vseparation", separation)
+
 func new_puzzle():
+	if sliced_textures.empty(): return
 	var tex_slices: Array = sliced_textures.pop_back()
 	
 	for i in tex_slices.size():
@@ -27,11 +34,11 @@ func new_puzzle():
 		buttons.append(button_instance)
 	
 	# Randomize buttons
+	print("button quant: ", buttons.size())
 	buttons.shuffle()
-	
+	setup_container()
 	for button in buttons:
 		$GridContainer.add_child(button)
-	pass
 
 func button_pressed(button):
 	if swap.size() > 0:
@@ -48,7 +55,7 @@ func button_pressed(button):
 func mediator(value, property):
 	$GridContainer.add_constant_override(property, value)
 
-func slice_texture(tex: ImageTexture, cols: int, rows: int) -> Array:
+func slice_texture(tex: ImageTexture, cols: float, rows: float) -> Array:
 	var result: Array = []
 	var region: Rect2 = Rect2(Vector2(0, 0), Vector2(tex.get_width() / cols, tex.get_height() / rows))
 	var offset_x: bool = false
@@ -82,8 +89,10 @@ func is_solved() -> bool:
 func victory():
 	var tween = get_tree().create_tween()
 	var trans = Tween.TRANS_CIRC
-	tween.tween_method(self, "mediator", 8.0, 0.0, 1, ["vseparation"]).set_trans(trans)
-	yield(tween.parallel().tween_method(self, "mediator", 8.0, 0.0, 1, ["hseparation"]).set_trans(trans), "finished")
+	tween.tween_method(self, "mediator", 20.0, 0.0, 1, ["vseparation"]).set_trans(trans)
+	yield(tween.parallel().tween_method(self, "mediator", 20.0, 0.0, 1, ["hseparation"]).set_trans(trans), "finished")
+	delete_puzzle()
+	new_puzzle()
 
 func load_textures(path: String) -> Array:
 	var result = []
@@ -102,13 +111,19 @@ func load_textures(path: String) -> Array:
 func prep_tex(path: String) -> ImageTexture:
 	var tex: ImageTexture = ImageTexture.new()
 	var image: Image = Image.new()
-	image.load(path)
+	var _err = image.load(path)
 	tex.create_from_image(image)
 #	tex.set_size_override(Vector2(255, 255))
 	return tex
 
-func prep_sliced_textures(textures: Array) -> Array:
+func prep_sliced_textures(tex_arr: Array) -> Array:
 	var result = []
-	for tex in textures:
+	for tex in tex_arr:
 		result.append(slice_texture(tex, columns, columns))
 	return result
+
+func delete_puzzle():
+	for child in $GridContainer.get_children():
+		$GridContainer.remove_child(child)
+		child.queue_free()
+	buttons.clear()
