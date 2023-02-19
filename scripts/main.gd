@@ -11,10 +11,10 @@ func _ready():
 	randomize()
 	textures = load_textures("res://assets/img/")
 	sliced_textures = prep_sliced_textures(textures)
-	print(sliced_textures)
+	sliced_textures.shuffle()
 	var button_scene = preload("res://scenes/button.tscn")
 	
-	var tex_slices: Array = sliced_textures[0]
+	var tex_slices: Array = sliced_textures.pop_back()
 	
 	for i in tex_slices.size():
 		var button_instance = button_scene.instance()
@@ -79,7 +79,7 @@ func victory():
 	var tween = get_tree().create_tween()
 	var trans = Tween.TRANS_CIRC
 	tween.tween_method(self, "mediator", 8.0, 0.0, 1, ["vseparation"]).set_trans(trans)
-	tween.parallel().tween_method(self, "mediator", 8.0, 0.0, 1, ["hseparation"]).set_trans(trans)
+	yield(tween.parallel().tween_method(self, "mediator", 8.0, 0.0, 1, ["hseparation"]).set_trans(trans), "finished")
 
 func load_textures(path: String) -> Array:
 	var result = []
