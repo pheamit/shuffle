@@ -11,8 +11,12 @@ config_version=4
 [application]
 
 config/name="shuffle"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/start.tscn"
 config/icon="res://icon.png"
+
+[autoload]
+
+settings="*res://scripts/settings.gd"
 
 [gui]
 

@@ -5,7 +5,6 @@ var button_scene
 var buttons = []
 var textures = []
 var sliced_textures = []
-export var columns = 2
 export var separation = 20
 
 func _ready():
@@ -18,12 +17,15 @@ func _ready():
 	new_puzzle()
 
 func setup_container():
-	$GridContainer.columns = columns
+	$GridContainer.columns = settings.columns
 	$GridContainer.add_constant_override("hseparation", separation)
 	$GridContainer.add_constant_override("vseparation", separation)
 
 func new_puzzle():
-	if sliced_textures.empty(): return
+	if sliced_textures.empty():
+		get_tree().change_scene("res://scenes/start.tscn")
+		return
+		
 	var tex_slices: Array = sliced_textures.pop_back()
 	
 	for i in tex_slices.size():
@@ -87,7 +89,7 @@ func is_solved():
 
 func victory():
 	var tween = get_tree().create_tween()
-	var trans = Tween.TRANS_CIRC
+	var trans = Tween.TRANS_BACK
 	tween.tween_method(self, "mediator", 20.0, 0.0, 1, ["vseparation"]).set_trans(trans)
 	yield(tween.parallel().tween_method(self, "mediator", 20.0, 0.0, 1, ["hseparation"]).set_trans(trans), "finished")
 	delete_puzzle()
@@ -118,7 +120,7 @@ func prep_tex(path: String) -> ImageTexture:
 func prep_sliced_textures(tex_arr: Array) -> Array:
 	var result = []
 	for tex in tex_arr:
-		result.append(slice_texture(tex, columns, columns))
+		result.append(slice_texture(tex, settings.columns, settings.columns))
 	return result
 
 func delete_puzzle():
