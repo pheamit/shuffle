@@ -134,3 +134,7 @@ func delete_puzzle():
 		$GridContainer.remove_child(child)
 		child.queue_free()
 	buttons.clear()
+
+func _input(event):
+	if event.is_action_pressed("esc-menu"):
+		get_tree().change_scene("res://scenes/start.tscn")
