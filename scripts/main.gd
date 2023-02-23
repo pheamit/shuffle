@@ -5,6 +5,7 @@ var button_scene
 var buttons = []
 var textures = []
 var sliced_textures = []
+var shader
 export var separation = 20
 
 func _ready():
@@ -14,6 +15,7 @@ func _ready():
 	sliced_textures = prep_sliced_textures(textures)
 	sliced_textures.shuffle()
 	button_scene = preload("res://scenes/button.tscn")
+	shader = preload("res://scripts/shaders/dissolve.gdshader")
 	new_puzzle()
 
 func setup_container():
@@ -29,7 +31,7 @@ func new_puzzle():
 	var tex_slices: Array = sliced_textures.pop_back()
 	
 	for i in tex_slices.size():
-		var button_instance = button_scene.instance()
+		var button_instance: TextureButton = button_scene.instance()
 		button_instance.texture_normal = tex_slices[i]
 		button_instance.set_number(i)
 		button_instance.connect("pressed", self, "button_pressed", [button_instance])
@@ -42,12 +44,16 @@ func new_puzzle():
 		$GridContainer.add_child(button)
 	is_solved()
 
-func button_pressed(button):
+func button_pressed(button: TextureButton):
 	if swap.size() > 0:
 		var idx_a = swap[0].get_index()
 		var idx_b = button.get_index()
+		create_tween().tween_property(button.material, "shader_param/sensitivity", 1.0, 0.3)
+		yield(create_tween().tween_property(swap[0].material, "shader_param/sensitivity", 1.0, 0.3), "finished")
 		$GridContainer.move_child(swap[0], idx_b)
 		$GridContainer.move_child(button, idx_a)
+		create_tween().tween_property(button.material, "shader_param/sensitivity", 0.0, 0.3)
+		create_tween().tween_property(swap[0].material, "shader_param/sensitivity", 0.0, 0.3)
 		swap.clear()
 		is_solved()
 	else:
